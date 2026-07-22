@@ -61,6 +61,5 @@ jobs:
       - name: Registry is in sync with data/rules.json
         run: |
           python3 src/ai_slop_guard/generate_registry.py
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git diff --exit-code src/ai_slop_guard/references/registry.md || (git add src/ai_slop_guard/references/registry.md && git commit -m "Auto-update registry.md" && git push && echo "::error::references/registry.md was out of date. It has been auto-updated." && exit 1)
+          git diff --exit-code src/ai_slop_guard/references/registry.md || \
+            (echo "::error::references/registry.md is out of date — run generate_registry.py and commit the result" && exit 1)
