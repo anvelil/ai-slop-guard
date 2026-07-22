@@ -307,7 +307,9 @@ def explain(rule_id: str) -> int:
     return 0
 
 
-def main(argv: list[str]) -> int:
+def main(argv: list[str] | None = None) -> int:
+    if argv is None:
+        argv = sys.argv[1:]
     if "--explain" in argv:
         idx = argv.index("--explain")
         if idx + 1 >= len(argv):
