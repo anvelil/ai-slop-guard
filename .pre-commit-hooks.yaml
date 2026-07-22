@@ -1,0 +1,7 @@
+-   id: slop-guard
+    name: AI Slop Guard
+    description: A zero-dependency linter for catching AI-generated code smells.
+    entry: slop-guard
+    language: python
+    types: [python]
+    require_serial: true
