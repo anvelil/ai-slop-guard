@@ -130,7 +130,7 @@ Python 3.9+. Nothing else — no packages, no network access, ever.
 
 ```bash
 # Install directly from github:
-pip install git+https://github.com/your-repo/ai-slop-guard.git
+pip install git+https://github.com/anvelil/ai-slop-guard.git
 ```
 
 ### Pre-commit hook
@@ -138,7 +138,7 @@ You can add `ai-slop-guard` to your `.pre-commit-config.yaml`:
 
 ```yaml
 repos:
-  - repo: https://github.com/your-repo/ai-slop-guard
+  - repo: https://github.com/anvelil/ai-slop-guard
     rev: v0.2.0
     hooks:
       - id: slop-guard
