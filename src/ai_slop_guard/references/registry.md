@@ -206,4 +206,3 @@ data = response.json()  # correct API -> nothing to flag, once this rule exists
 ```
 
 **Tradeoffs:** Registered so it isn't forgotten. No design work has started; a naive implementation would guess at plausible method names, which isn't good enough to ship.
-
