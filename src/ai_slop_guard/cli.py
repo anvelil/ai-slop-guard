@@ -43,7 +43,7 @@ def _is_ignored(source_lines: list[str], lineno: int) -> bool:
 
 
 def _out(*args, **kwargs) -> None:
-    print(*args, **kwargs)
+    print(*args, **kwargs)  # slop-guard: ignore
 
 
 class Finding:
