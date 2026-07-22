@@ -1,40 +1,47 @@
 # AI Slop Guard
 
-A 6-stage code review pipeline for AI coding agents. `check.py` (stage 3/6)
-is the static-analysis piece; see below for the whole sequence.
-
 ![python](https://img.shields.io/badge/python-3.9+-blue) ![dependencies](https://img.shields.io/badge/dependencies-0-brightgreen) ![license](https://img.shields.io/badge/license-MIT-green)
 
-Turns your AI coding agent from "generate code, hope it's fine" into a
-6-stage self-review pipeline: **generate → mentally compile → lint → review
-→ refactor → final audit**. That sequence - not any individual rule - is
-this project's actual distinctive part; see
-[`docs/adr/0001-six-stage-pipeline.md`](docs/adr/0001-six-stage-pipeline.md)
-for why it's structured this way instead of as a flat checklist.
+A month ago I got tired of the same pattern with AI coding agents: they
+generate something, it runs, it looks fine — and then a week later I find a
+stray `print()`, an import nobody uses, or a `try/except: pass` quietly
+eating an error I actually needed to see. Not because the agent is bad at
+writing code. It's bad at *checking its own work*, and most workflows never
+ask it to.
 
-`scripts/check.py` is real static analysis (Python's `ast`, stdlib-only,
-zero installs, zero network calls) that reports findings with a rule ID,
-reason, and suggested fix. It exists to support the pipeline: stage 6
-re-runs stage 3's exact check specifically to catch
-regressions the refactor step (stage 5) itself introduces — see
-[`docs/adr/0002-stage6-reruns-stage3.md`](docs/adr/0002-stage6-reruns-stage3.md).
-Stages 2 and 4 have no tool at all; they're pure reasoning steps the
-pipeline still requires.
+So instead of writing another linter, I built a small pipeline that makes
+an agent review itself before calling a task done:
 
-## Why a pipeline instead of a flat rule list
+**generate → mentally compile → lint → review → refactor → final audit.**
 
-A linter tells you what's wrong. It doesn't tell you *when* to check, or
-what to do about the things it structurally can't see. Sequencing generate,
-verify, review, and re-verify — so an agent's own refactor doesn't quietly
-undo the verification — is the actual point here. `check.py` and the rule
-registry below support stages 3 and 6; they're intentionally the least
-novel part of this repository.
+`scripts/check.py` — real static analysis, `ast`-based, stdlib only, no
+installs, no network — is stage 3. It's the least interesting part of this
+repo, honestly. The sequencing is the actual point: an agent that fixes
+what the linter found is *also* the agent most likely to break something
+else while doing it — a rename that leaves a dead import, a "cleaned up"
+except block that now swallows an error it used to raise. Stage 6 catches
+that by re-running stage 3's exact check and requiring the finding count
+not to go up. Nobody else's README for this kind of tool mentions that
+failure mode, as far as I've seen — see `docs/adr/0002-stage6-reruns-stage3.md`
+if you want the full reasoning.
 
-## Sample run
+## Why not just add more rules
 
-A `check.py --json` run, before and after applying its own suggestions to
-`examples/violations_demo.py` — reproduce with the two commands in
-[`benchmarks/README.md`](benchmarks/README.md):
+There are already several AI-slop scanners out there with 50+ rules across
+half a dozen languages. I'm not trying to out-rule them. This project
+checks three things reliably (unused imports, dead module-level functions,
+exception handlers that swallow errors silently) and is upfront that three
+more (duplicated logic, unnecessary null checks, restating comments) are
+listed but deliberately left manual, because doing them automatically means
+guessing — and a rule that guesses wrong often enough gets disabled, which
+is worse than not having it. `docs/philosophy.md` goes through the
+reasoning per rule if you're curious, including the ones I decided *not*
+to build.
+
+## What actually happened when I ran this on real code
+
+Small fixture, before/after applying its own suggestions
+(`examples/violations_demo.py`):
 
 | Rule | Before | After |
 |---|---|---|
@@ -44,70 +51,53 @@ A `check.py --json` run, before and after applying its own suggestions to
 | ASG007 Leftover debug output | 1 | 0 |
 | **Total** | **6** | **0** |
 
-And against real, independently-written code — not a fixture — the tool's
-own false-positive rate, measured, fixed, and re-measured:
-
-| Benchmark run | Findings | False positives |
-|---|---|---|
-| Flask tutorial app, before scope fix | 34 | 34 (100%) |
-| Flask tutorial app, after scope fix | 4 | 4 (pre-existing cross-file cases, see `benchmarks/README.md`) |
-
-Full story: [`benchmarks/README.md`](benchmarks/README.md). The 34→4 fix
-happened during this project's own development — see `CHANGELOG.md`.
+More useful: running it against code I didn't write, Flask's own tutorial
+app. First pass flagged 34 "dead functions" — every one was a false
+positive, because route handlers and pytest tests get called by the
+framework, not by a direct name in the file, and the script had no way to
+know that yet. I fixed the scope (exclude decorated functions and `test_*`
+names) and re-ran it: 4 findings left, all explainable, all cross-file
+calls the tool has never claimed to see. Full writeup in
+`benchmarks/README.md` — I'd rather show you where it was wrong than just
+tell you it works.
 
 ## Language support
 
 | Language | Status |
 |---|---|
-| Python | ✓ implemented (`ast`-based, all 4 script-verified rules) |
-| TypeScript / JavaScript | partial (regex-based for unused named imports, empty catch, debug output — see `docs/known-limitations.md`) |
-| Java | planned |
-| Go | planned |
-| Rust | planned |
+| Python | full — `ast`-based, all script-verified rules |
+| TypeScript / JavaScript | partial — regex-based for named imports, empty catch, debug output (see `docs/known-limitations.md`) |
+| Java / Go / Rust | not yet |
 
 ## What's inside
 
 ```
 ai-slop-guard/
-├── SKILL.md                    # entry point — frontmatter + 6-stage pipeline
-├── data/rules.json             # source of truth: rule IDs, status, philosophy
+├── SKILL.md                    # entry point — frontmatter + the 6-stage pipeline
+├── data/rules.json             # rule IDs, status, reasoning per rule
 ├── scripts/
-│   ├── check.py                 # real static analysis, stdlib only
-│   └── generate_registry.py     # regenerates references/registry.md from rules.json
+│   ├── check.py                 # the actual static analysis
+│   └── generate_registry.py     # regenerates references/registry.md
 └── references/
-    ├── rules.md                 # full reasoning + before/after per rule
-    └── registry.md              # generated: coverage table + full per-rule philosophy
+    ├── rules.md                 # before/after per rule
+    └── registry.md              # generated coverage table
 docs/
-├── philosophy.md                # project-wide: why these rules and not others
-├── known-limitations.md         # every known false positive/negative, with examples
-└── adr/                         # architecture decision records
-    ├── 0001-six-stage-pipeline.md
-    ├── 0002-stage6-reruns-stage3.md
-    ├── 0003-why-stdlib-only.md
-    └── 0004-why-no-autofix.md
+├── philosophy.md                # why these rules, and not others
+├── known-limitations.md         # every known false positive, with examples
+└── adr/                          # a few decisions worth explaining
 benchmarks/
-└── README.md                    # methodology + real numbers from a real project
-examples/
-├── violations_demo.py            # before
-├── violations_demo_fixed.py      # after
-├── real-world/                   # patterns from real, independently-written code
-├── false-positive/                # current, documented false positives
-└── edge-cases/                    # inputs exercising a specific code path
-tests/
-├── golden/<case>/                # input.py + expected.json per case
-└── test_golden.py                # unittest — fails if check.py's output drifts
-.github/workflows/ci.yml          # self-check, golden tests, registry-sync check
-CHANGELOG.md
+└── README.md                    # the Flask run, in full
+examples/ · tests/ · .github/workflows/ci.yml
 ```
 
-`ai-slop-guard/` is a self-contained [Claude Skill](https://docs.claude.com) —
-copy that one folder anywhere Claude Code looks for skills and it activates
-automatically. Everything else in this repo (`.cursor/`, root `CLAUDE.md`) is
-a thin adapter pointing at that same folder for other tools.
+`ai-slop-guard/` is a self-contained Claude Skill — copy that folder
+wherever Claude Code looks for skills and it activates automatically.
+Everything else (`.cursor/`, root `CLAUDE.md`) just points other tools at
+the same folder.
 
-## Installation
+## Installing it
 
-**Claude Code** (native Skill support):
+**Claude Code:**
 
 ```bash
 mkdir -p .claude/skills
@@ -122,95 +112,77 @@ cp .cursor/rules/ai-slop-guard.mdc <your-project>/.cursor/rules/
 cp -r ai-slop-guard <your-project>/
 ```
 
-**Any other agent that reads a root `CLAUDE.md` / system prompt:**
+**Anything that reads a root `CLAUDE.md` / system prompt:**
 
 ```bash
 cp CLAUDE.md <your-project>/
 cp -r ai-slop-guard <your-project>/
 ```
 
-**Just want the checker, no agent integration:**
+**Just the checker, no agent involved:**
 
 ```bash
-python3 ai-slop-guard/scripts/check.py path/to/your/code          # human-readable
-python3 ai-slop-guard/scripts/check.py --json path/to/your/code   # machine-readable
+python3 ai-slop-guard/scripts/check.py path/to/your/code
+python3 ai-slop-guard/scripts/check.py --json path/to/your/code
 ```
 
-## The pipeline
+## The pipeline itself
 
-| Stage | What happens | Tool-verified? |
+| Stage | What happens | Checked by a script? |
 |---|---|---|
 | 1. Generate | Write the solution | — |
-| 2. Compile mentally | Trace the code by reading it — names resolve, arities match, branches return the right thing | No — reasoning only |
+| 2. Compile mentally | Read it back before running it — names resolve, arities match, branches return what's expected | No, pure reasoning |
 | 3. Lint | Run `check.py` on the diff | Yes |
-| 4. Review | Senior-level pass: duplicated logic, unneeded defensive checks, comments that restate code | No — needs project/type context |
-| 5. Refactor | Fix what 3–4 found, structure only, behavior preserved | — |
-| 6. Final audit | Re-run `check.py` — finding count must not exceed stage 3's | Yes |
+| 4. Review | Duplicated logic, defensive checks a type already rules out, comments that just restate the code | No, needs project context |
+| 5. Refactor | Fix what 3–4 found, structure only | — |
+| 6. Final audit | Re-run stage 3's command — the count must not go up | Yes |
 
-Full stage-by-stage instructions: [`ai-slop-guard/SKILL.md`](ai-slop-guard/SKILL.md).
+Full instructions: `ai-slop-guard/SKILL.md`.
 
-## Rule registry
+## The rules, as of now
 
-Rule set v1.0.0 (`ai-slop-guard/data/rules.json`) — see `CHANGELOG.md` for
-why this version number moves independently from the project version.
-
-| ID | Name | Status | Script-verified |
-|---|---|---|---|
-| ASG001 | Unused imports | stable | yes |
-| ASG002 | Dead code (module-level, undecorated, non-`test_*`) | experimental | partial |
-| ASG003 | Catch-all / empty exception handling | stable | yes |
-| ASG004 | Duplicated logic | planned | no — manual |
-| ASG005 | Unnecessary defensive checks | planned | no — manual |
-| ASG006 | Comments that restate the code | planned | no — manual |
-| ASG007 | Leftover debug output | stable | yes |
-| ASG008 | Hallucinated API usage | planned | not implemented |
-
-Print any rule's full reasoning on demand:
+| ID | Name | Status |
+|---|---|---|
+| ASG001 | Unused imports | stable |
+| ASG002 | Dead module-level function (undecorated, non-`test_*`) | experimental |
+| ASG003 | Catch-all / empty exception handling | stable |
+| ASG004 | Duplicated logic | planned — manual |
+| ASG005 | Unnecessary defensive checks | planned — manual |
+| ASG006 | Comments that restate the code | planned — manual |
+| ASG007 | Leftover debug output | stable |
+| ASG008 | Hallucinated API usage | planned — not implemented |
 
 ```bash
-python3 ai-slop-guard/scripts/check.py --explain ASG002
+python3 ai-slop-guard/scripts/check.py --explain ASG002   # full reasoning for one rule
 ```
 
-Generated, always-current version with the coverage table and full
-per-rule philosophy: [`ai-slop-guard/references/registry.md`](ai-slop-guard/references/registry.md).
-Full reasoning and before/after examples: [`ai-slop-guard/references/rules.md`](ai-slop-guard/references/rules.md).
-Why these rules and not others: [`docs/philosophy.md`](docs/philosophy.md).
-Why the pipeline is structured the way it is: [`docs/adr/`](docs/adr/README.md).
-Known false positives and edge cases: [`docs/known-limitations.md`](docs/known-limitations.md).
+## If it flags something that isn't actually a problem
 
-## Suppressing a false positive
+Add `# slop-guard: ignore` (Python) or `// slop-guard: ignore` (JS/TS) on
+the line, and say why nearby — in a comment or the commit message — rather
+than silencing something you haven't actually looked at.
 
-Put `# slop-guard: ignore` (Python) or `// slop-guard: ignore` (JS/TS) on the
-line, and say why in a nearby comment or commit message rather than silencing
-a finding you haven't actually looked at — the script's own CLI output uses
-this for its one legitimate `print()` call, see `ai-slop-guard/scripts/check.py`.
+## Requirements
 
-## Prerequisites
+Python 3.9+. Nothing else — no packages, no network access, ever.
 
-Python 3.9+. Nothing else — no packages to install, no network access
-required or used, for the tool or for its tests.
+## Try it yourself
 
 ```bash
-python3 --version
-```
-
-## Try it
-
-```bash
-python3 ai-slop-guard/scripts/check.py examples/violations_demo.py         # should report 6 findings
-python3 ai-slop-guard/scripts/check.py examples/violations_demo_fixed.py   # should report none
-python3 ai-slop-guard/scripts/check.py examples/real-world/flask_route_handler.py     # should report none
-python3 ai-slop-guard/scripts/check.py examples/false-positive/cross_file_call.py     # should report 1 (documented false positive)
-python3 -m unittest tests.test_golden -v                                    # should pass, 8/8
+python3 ai-slop-guard/scripts/check.py examples/violations_demo.py         # 6 findings
+python3 ai-slop-guard/scripts/check.py examples/violations_demo_fixed.py   # 0
+python3 ai-slop-guard/scripts/check.py examples/real-world/flask_route_handler.py  # 0
+python3 ai-slop-guard/scripts/check.py examples/false-positive/cross_file_call.py  # 1, documented
+python3 -m unittest tests.test_golden -v                                   # 8/8
 ```
 
 ## Contributing
 
-New rule proposals need: a concrete, reproducible pattern (not "write better
-code"), an entry in `data/rules.json`, a before/after example in
-`references/rules.md`, and — if it's mechanically detectable — a
-corresponding check in `scripts/check.py` with a golden test that doesn't
-false-positive on the script's own code. See `CONTRIBUTING.md`.
+If you want to propose a rule, I need a real reproducible pattern (not
+"write cleaner code"), an entry in `data/rules.json`, a before/after in
+`references/rules.md`, and — if it can be checked mechanically — a test in
+`scripts/check.py` that doesn't false-positive on its own code. See
+`CONTRIBUTING.md`.
 
 ## License
 
