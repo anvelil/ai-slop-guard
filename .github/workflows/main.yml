@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.9", "3.11", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Self-check — the tool must pass its own rules
+        run: python3 ai-slop-guard/scripts/check.py ai-slop-guard/scripts/check.py
+
+      - name: Self-check — the registry generator too
+        run: python3 ai-slop-guard/scripts/check.py ai-slop-guard/scripts/generate_registry.py
+
+      - name: Golden tests — output must not drift silently
+        run: python3 -m unittest tests.test_golden -v
+
+      - name: Demo fixture — must still find the seeded violations
+        run: |
+          count=$(python3 ai-slop-guard/scripts/check.py --json examples/violations_demo.py | python3 -c "import json,sys; print(len(json.load(sys.stdin)))")
+          echo "found $count findings in examples/violations_demo.py"
+          test "$count" -gt 0
+
+      - name: Fixed demo fixture — must be clean
+        run: python3 ai-slop-guard/scripts/check.py examples/violations_demo_fixed.py
+
+      - name: Real-world example — must still be clean
+        run: python3 ai-slop-guard/scripts/check.py examples/real-world/flask_route_handler.py
+
+      - name: Documented false positive — must still fire (so it stays documented, not silently fixed or silently worse)
+        run: |
+          count=$(python3 ai-slop-guard/scripts/check.py --json examples/false-positive/cross_file_call.py | python3 -c "import json,sys; print(len(json.load(sys.stdin)))")
+          test "$count" -eq 1
+
+      - name: --explain works for every implemented rule
+        run: |
+          for rule in ASG001 ASG002 ASG003 ASG007; do
+            python3 ai-slop-guard/scripts/check.py --explain "$rule" > /dev/null
+          done
+
+      - name: Registry is in sync with data/rules.json
+        run: |
+          python3 ai-slop-guard/scripts/generate_registry.py
+          git diff --exit-code ai-slop-guard/references/registry.md || \
+            (echo "::error::references/registry.md is out of date — run generate_registry.py and commit the result" && exit 1)
