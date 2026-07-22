@@ -1,0 +1,10 @@
+[
+  {
+    "path": "input.py",
+    "line": 4,
+    "rule_id": "ASG003",
+    "title": "Catch-all exception handling (except Exception)",
+    "reason": "This except block only passes, continues, or logs \u2014 it silently swallows whatever error occurs instead of handling it.",
+    "fix": "Catch the specific exception type you expect, handle it, or re-raise with added context (e.g. `raise RuntimeError(...) from e`)."
+  }
+]

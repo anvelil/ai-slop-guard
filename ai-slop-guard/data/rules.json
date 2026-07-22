@@ -1,0 +1,168 @@
+{
+  "rule_set_version": "1.0.0",
+  "rules": [
+    {
+      "id": "ASG001",
+      "name": "Unused imports",
+      "category": "hygiene",
+      "languages": [
+        "python",
+        "typescript",
+        "javascript"
+      ],
+      "script_verified": true,
+      "status": "stable",
+      "since": "0.1.0",
+      "stage": "lint",
+      "description": "An import is present but never referenced in the file.",
+      "philosophy": {
+        "why": "Unambiguous and always safe to act on: Python's ast resolves it exactly, with no guessing about scope or usage elsewhere.",
+        "example": "import os\n# os is never used below",
+        "counterexample": "import os\nos.environ['DEBUG'] = '1'  # used -> not flagged",
+        "tradeoffs": "No known false positives on plain import/from-import. Python's __all__ re-exports and TYPE_CHECKING-only imports are not understood yet -- see docs/known-limitations.md."
+      }
+    },
+    {
+      "id": "ASG002",
+      "name": "Dead code (module-level candidate)",
+      "category": "hygiene",
+      "languages": [
+        "python"
+      ],
+      "script_verified": "partial",
+      "status": "experimental",
+      "since": "0.1.0",
+      "stage": "lint",
+      "description": "A module-level function is defined but never called anywhere else in the same file. Class methods, decorated functions, and pytest test_* functions are excluded.",
+      "philosophy": {
+        "why": "Dead code is a real cost -- it's read, half-understood, and sometimes 'fixed' by someone who doesn't realize nothing calls it. Flagging module-level candidates is cheap and, once decorators/tests are excluded, has a low false-positive rate on real code.",
+        "example": "def unused_helper():\n    return 42\n# never called anywhere in the file",
+        "counterexample": "@app.route('/')\ndef index():\n    ...\n# decorated -> not flagged, framework calls it indirectly",
+        "tradeoffs": "Status is 'experimental' rather than 'stable': a benchmark against Flask's own tutorial app found a 34/34 false-positive rate before the decorator/test_* exclusion was added (see benchmarks/README.md), and this class of scope-narrowing may not be exhaustive yet -- other frameworks may have their own indirect-call conventions not yet excluded. It can never see cross-file calls, so every finding needs manual verification regardless."
+      }
+    },
+    {
+      "id": "ASG003",
+      "name": "Catch-all / empty exception handling",
+      "category": "correctness",
+      "languages": [
+        "python",
+        "typescript",
+        "javascript"
+      ],
+      "script_verified": true,
+      "status": "stable",
+      "since": "0.1.0",
+      "stage": "lint",
+      "description": "A bare or broad except/catch block whose body only passes, continues, or logs, silently swallowing the error.",
+      "philosophy": {
+        "why": "A broad except that does nothing observable hides bugs instead of fixing them -- the one shape of exception handling that's actively worse than no handling at all, since it also suppresses the traceback.",
+        "example": "try:\n    risky()\nexcept Exception:\n    pass",
+        "counterexample": "try:\n    risky()\nexcept Exception as e:\n    raise RuntimeError('risky() failed') from e\n# re-raises with context -> not flagged",
+        "tradeoffs": "Deliberately conservative: only empty/pass/continue/single-log bodies trigger it, so a broad except that does real cleanup (closing a resource, rolling back a transaction) alongside more statements is not flagged, even though it may still be worth a human look."
+      }
+    },
+    {
+      "id": "ASG004",
+      "name": "Duplicated logic",
+      "category": "structure",
+      "languages": [
+        "python",
+        "typescript",
+        "javascript"
+      ],
+      "script_verified": false,
+      "status": "planned",
+      "since": "0.1.0",
+      "stage": "review",
+      "description": "Near-identical logic exists elsewhere in the project under a different name. Requires whole-project context the script does not have.",
+      "philosophy": {
+        "why": "Two near-identical functions with different names is the clearest sign an agent didn't look at the existing codebase before writing new code, and it doubles the maintenance surface for one piece of logic.",
+        "example": "function formatUserDate(d) { return d.toISOString().split('T')[0]; }\nfunction formatOrderDate(d) { return d.toISOString().split('T')[0]; }",
+        "counterexample": "function formatDate(d) { return d.toISOString().split('T')[0]; }\n// single shared implementation -> nothing to flag",
+        "tradeoffs": "Manual for now — no design work has started on making this script-verifiable. Whole-project indexing plus some notion of semantic similarity would be needed; not attempted yet."
+      }
+    },
+    {
+      "id": "ASG005",
+      "name": "Unnecessary defensive checks",
+      "category": "structure",
+      "languages": [
+        "python",
+        "typescript",
+        "javascript"
+      ],
+      "script_verified": false,
+      "status": "planned",
+      "since": "0.1.0",
+      "stage": "review",
+      "description": "A guard against null/undefined for a value whose type already rules that out. Requires type information the script does not have.",
+      "philosophy": {
+        "why": "A check that can never trigger protects against nothing, adds noise to every diff that touches the function, and creates false confidence that the value was actually validated.",
+        "example": "function getFullName(user: User): string {\n  if (!user) return '';\n  return `${user.firstName} ${user.lastName}`;\n}",
+        "counterexample": "function getFullName(user: User | null): string {\n  if (!user) return '';\n  return `${user.firstName} ${user.lastName}`;\n}\n// user can genuinely be null here -> not unnecessary",
+        "tradeoffs": "Manual for now. Would need a resolved type checker's output, not syntax alone — nothing built yet."
+      }
+    },
+    {
+      "id": "ASG006",
+      "name": "Comments that restate the code",
+      "category": "structure",
+      "languages": [
+        "python",
+        "typescript",
+        "javascript"
+      ],
+      "script_verified": false,
+      "status": "planned",
+      "since": "0.1.0",
+      "stage": "review",
+      "description": "A comment describes what the code does instead of why, adding no information beyond the code itself. Judgment call.",
+      "philosophy": {
+        "why": "A comment that just restates the next line adds reading time without adding information, and worse, rots silently -- nobody updates a comment that never had to be true.",
+        "example": "// increment counter by one\ncounter += 1;",
+        "counterexample": "// compensate for the off-by-one in the API, which counts from zero\ncounter += 1;\n// explains 'why' -> not flagged",
+        "tradeoffs": "Manual, and likely to stay that way — this is closer to a judgment call than a rule."
+      }
+    },
+    {
+      "id": "ASG007",
+      "name": "Leftover debug output",
+      "category": "hygiene",
+      "languages": [
+        "python",
+        "typescript",
+        "javascript"
+      ],
+      "script_verified": true,
+      "status": "stable",
+      "since": "0.1.0",
+      "stage": "lint",
+      "description": "A print()/console.log()-style call left in code that is not deliberate logging through the project's logger.",
+      "philosophy": {
+        "why": "Debug prints are the most common single artifact of iterative, exploratory agent work -- cheap to add while debugging, easy to forget to remove, and each one is a small, avoidable embarrassment in a diff.",
+        "example": "def add(a, b):\n    result = a + b\n    print(result)\n    return result",
+        "counterexample": "def add(a, b):\n    result = a + b\n    print(result)  # slop-guard: ignore -- CLI tool's intended output\n    return result",
+        "tradeoffs": "AST-based for Python, so it won't match the word 'print' inside a string or docstring -- but it also can't distinguish 'genuinely forgotten' from 'temporarily commented out for a debugging session', both get flagged the same way."
+      }
+    },
+    {
+      "id": "ASG008",
+      "name": "Hallucinated API usage",
+      "category": "correctness",
+      "languages": [],
+      "script_verified": false,
+      "status": "planned",
+      "since": "planned",
+      "stage": "review",
+      "description": "Code calls a method/attribute/parameter that does not exist on the referenced type or library version. Not implemented: reliably detecting this needs resolved type information or the actual library's API surface — single-file static analysis alone isn't enough.",
+      "philosophy": {
+        "why": "One of the most common and costly agent mistakes -- confidently calling a plausible-sounding method that was never real, or that existed in a different library version -- and one of the hardest to catch without running the code.",
+        "example": "response = requests.get(url)\ndata = response.to_json()  # requests.Response has .json(), not .to_json()",
+        "counterexample": "data = response.json()  # correct API -> nothing to flag, once this rule exists",
+        "tradeoffs": "Registered so it isn't forgotten. No design work has started; a naive implementation would guess at plausible method names, which isn't good enough to ship.",
+        "description": "Code calls a method/attribute/parameter that does not exist on the referenced type or library version. Not implemented: reliably detecting this needs resolved type information or the actual library's API surface, not just single-file static analysis."
+      }
+    }
+  ]
+}

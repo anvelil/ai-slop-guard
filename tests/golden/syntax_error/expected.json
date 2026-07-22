@@ -1,0 +1,10 @@
+[
+  {
+    "path": "input.py",
+    "line": 1,
+    "rule_id": "PARSE",
+    "title": "Syntax error",
+    "reason": "'(' was never closed (input.py, line 1)",
+    "fix": "Fix the syntax error before running further checks."
+  }
+]

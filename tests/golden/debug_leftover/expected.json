@@ -1,0 +1,10 @@
+[
+  {
+    "path": "input.py",
+    "line": 3,
+    "rule_id": "ASG007",
+    "title": "Leftover debug output",
+    "reason": "print(...) call left in code.",
+    "fix": "Remove it, or route through the project's logger if the output is deliberate. If it's intentional CLI output, mark the line with `# slop-guard: ignore`."
+  }
+]
