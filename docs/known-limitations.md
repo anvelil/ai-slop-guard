@@ -92,7 +92,7 @@ check instead of trusting the tool blindly.
   cross-file knowledge (ASG004 duplicated logic, whether an ASG002 candidate
   is really dead, whether an ASG005 guard is really unnecessary given the
   full type picture) is explicitly out of scope for automation and stays a
-  human review step — see stage 4 (Review) in the pipeline.
+  human review step — see stage 7 (Review) in the pipeline.
 - No attempt is made to resolve imports, follow the actual call graph, or
   understand decorators/metaclasses/dependency injection that might call a
   function indirectly. Treat every finding as "here's something to look at",

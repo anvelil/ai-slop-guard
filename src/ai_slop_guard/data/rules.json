@@ -74,7 +74,7 @@
       "script_verified": false,
       "status": "planned",
       "since": "0.1.0",
-      "stage": "review",
+      "stage": "plan",
       "description": "Near-identical logic exists elsewhere in the project under a different name. Requires whole-project context the script does not have.",
       "philosophy": {
         "why": "Two near-identical functions with different names is the clearest sign an agent didn't look at the existing codebase before writing new code, and it doubles the maintenance surface for one piece of logic.",

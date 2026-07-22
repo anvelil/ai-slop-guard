@@ -12,17 +12,17 @@ ask it to.
 So instead of writing another linter, I built a small pipeline that makes
 an agent review itself before calling a task done:
 
-**generate → mentally compile → lint → review → refactor → final audit.**
+**analyze → plan → generate → mentally compile → syntax check → lint → review → refactor → final audit.**
 
 `src/ai_slop_guard/cli.py` — real static analysis, `ast`-based, stdlib only, no
-installs, no network — is stage 3. It's the least interesting part of this
+installs, no network — is stage 6. It's the least interesting part of this
 repo, honestly. The sequencing is the actual point: an agent that fixes
 what the linter found is *also* the agent most likely to break something
 else while doing it — a rename that leaves a dead import, a "cleaned up"
-except block that now swallows an error it used to raise. Stage 6 catches
-that by re-running stage 3's exact check and requiring the finding count
+except block that now swallows an error it used to raise. Stage 9 catches
+that by re-running stage 6's exact check and requiring the finding count
 not to go up. Nobody else's README for this kind of tool mentions that
-failure mode, as far as I've seen — see `docs/adr/0002-stage6-reruns-stage3.md`
+failure mode, as far as I've seen — see `docs/adr/0002-stage9-reruns-stage6.md`
 if you want the full reasoning.
 
 ## Why not just add more rules
@@ -92,12 +92,15 @@ examples/ · tests/ · .github/workflows/main.yml
 
 | Stage | What happens | Checked by a script? |
 |---|---|---|
-| 1. Generate | Write the solution | — |
-| 2. Compile mentally | Read it back before running it — names resolve, arities match, branches return what's expected | No, pure reasoning |
-| 3. Lint | Run `slop-guard` on the diff | Yes |
-| 4. Review | Duplicated logic, defensive checks a type already rules out, comments that just restate the code | No, needs project context |
-| 5. Refactor | Fix what 3–4 found, structure only | — |
-| 6. Final audit | Re-run stage 3's command — the count must not go up | Yes |
+| 1. Analyze | Understand requirements, inspect code, and review existing context | No |
+| 2. Plan | Draft the implementation strategy and check for duplicate code (ASG004) | No |
+| 3. Generate | Implement changes in code | — |
+| 4. Compile mentally | Mentally walk through logical branches, arity, and name resolution | No, pure reasoning |
+| 5. Syntax check | Mechanically check for syntax errors (e.g. running python compilation) | Yes |
+| 6. Lint | Run `slop-guard` on the changes to catch mechanical smells (ASG001, ASG002, ASG003, ASG007) | Yes |
+| 7. Review | Audit for design smells, unnecessary guards (ASG005), restating comments (ASG006), and hallucinated API usage (ASG008) | No, needs context |
+| 8. Refactor | Fix issues identified in steps 6 & 7 | — |
+| 9. Final audit | Re-run `slop-guard` to verify that findings did not increase compared to step 6 | Yes |
 
 ## The rules, as of now
 

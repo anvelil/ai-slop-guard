@@ -24,7 +24,7 @@ slop-guard examples/violations_demo_fixed.py
 | ASG007 Leftover debug output | 1 | 0 |
 | **Total** | **6** | **0** |
 
-ASG004 and ASG005 aren't in the `src/ai_slop_guard/cli.py` check (what stage 3 expects in the pipeline), and this file doesn't happen to exercise them; a `0` here
+ASG004 and ASG005 aren't in the `src/ai_slop_guard/cli.py` check (what stage 6 expects in the pipeline), and this file doesn't happen to exercise them; a `0` here
 doesn't mean everything was checked. ASG008 isn't implemented (see
 `docs/philosophy.md`). And this is one small file — the number below, from
 independently-written code, is the one that says something about

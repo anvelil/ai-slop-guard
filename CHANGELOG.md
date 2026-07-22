@@ -9,6 +9,12 @@ Two version numbers move independently here:
   change to what it flags. A false-positive fix within a rule's existing
   scope does not bump it.
 
+## 0.3.0 — rule set v1.0.0
+
+### Changed
+- **9-Stage Pipeline**: Restructured the development and verification pipeline from 6 stages to 9 stages to introduce explicit Analyze, Plan, Syntax Check, and Testing phases.
+- Updated ADR-0001 ("Nine-stage pipeline") and ADR-0002 ("Stage 9 re-runs stage 6's exact check") to align with the new structure.
+
 ## 0.2.0 — rule set v1.0.0
 
 ### Added

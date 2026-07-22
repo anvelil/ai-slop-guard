@@ -69,7 +69,7 @@ already exists somewhere else in the project, whether a type defined
 elsewhere really rules out `null`, whether a comment's reasoning is
 actually obvious from code the script can't see beyond this file. I could
 approximate all of this with heuristics, but they'd be wrong often enough
-that I'd rather keep them as an explicit manual step (stage 4 in
+that I'd rather keep them as an explicit manual step (stage 7 in
 `README.md`) — with the reasoning written down so whoever's doing the
 review, human or agent, can apply real judgment instead of trusting a
 heuristic that only looks automated.

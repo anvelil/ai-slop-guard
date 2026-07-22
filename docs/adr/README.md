@@ -8,7 +8,7 @@ the old one's status as "Superseded by NNNN", don't delete it).
 
 | # | Title | Status |
 |---|---|---|
-| [0001](0001-six-stage-pipeline.md) | Six-stage pipeline instead of a flat rule list | Accepted |
-| [0002](0002-stage6-reruns-stage3.md) | Stage 6 re-runs stage 3's exact check | Accepted |
+| [0001](0001-nine-stage-pipeline.md) | Nine-stage pipeline instead of a six-stage pipeline | Accepted |
+| [0002](0002-stage9-reruns-stage6.md) | Stage 9 re-runs stage 6's exact check | Accepted |
 | [0003](0003-why-stdlib-only.md) | Python standard library only, no dependencies | Accepted |
 | [0004](0004-why-no-autofix.md) | No autofix | Accepted |
