@@ -1,6 +1,6 @@
 # Edge cases
 
-Inputs chosen to exercise a specific code path in `check.py` rather than
+Inputs chosen to exercise a specific code path in `slop-guard` rather than
 to demonstrate a rule in the normal sense.
 
 ## decorator_without_parens.py
@@ -11,7 +11,7 @@ slop-guard examples/edge-cases/decorator_without_parens.py
 ```
 
 `@route_registry` (no call parentheses) counts as a use of
-`route_registry`. An earlier version of `check.py` only tracked
+`route_registry`. An earlier version of `slop-guard` only tracked
 `ast.Call` nodes as "uses"; a bare decorator reference is an `ast.Name`
 instead, so `route_registry` was flagged as dead code until this was
 fixed. This fixture is also a golden test:

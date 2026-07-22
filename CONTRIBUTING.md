@@ -14,7 +14,7 @@
    `--explain ASGxxx` and the generated registry both read directly from.
 3. regenerate the table:
    ```bash
-   python3 scripts/generate_registry.py
+   python3 src/ai_slop_guard/generate_registry.py
    ```
    and commit the resulting `references/registry.md` — CI
    checks this file is in sync with `rules.json` and fails the build if not.

@@ -19,7 +19,7 @@
         "why": "Unambiguous and always safe to act on: Python's ast resolves it exactly, with no guessing about scope or usage elsewhere.",
         "example": "import os\n# os is never used below",
         "counterexample": "import os\nos.environ['DEBUG'] = '1'  # used -> not flagged",
-        "tradeoffs": "No known false positives on plain import/from-import. Python's __all__ re-exports (string literals only -- `__all__ = [\"x\"]` or `+= [...]`) are recognized as a use since 0.3.0. Dynamically built __all__ (e.g. a list comprehension) and TYPE_CHECKING-only imports used solely in string annotations are still not understood -- see docs/known-limitations.md."
+        "tradeoffs": "No known false positives on plain import/from-import. Python's __all__ re-exports (string literals only -- `__all__ = [\"x\"]` or `+= [...]`) are recognized as a use since 0.2.0. Dynamically built __all__ (e.g. a list comprehension) and TYPE_CHECKING-only imports used solely in string annotations are still not understood -- see docs/known-limitations.md."
       }
     },
     {

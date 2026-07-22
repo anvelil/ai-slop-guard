@@ -1,6 +1,6 @@
 # Known, current false positives
 
-Real cases where `check.py` still produces a false positive today, kept as
+Real cases where `slop-guard` still produces a false positive today, kept as
 fixtures so the limitation is demonstrated rather than just asserted in
 prose. Cross-reference: `docs/known-limitations.md`.
 

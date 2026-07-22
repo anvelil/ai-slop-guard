@@ -16,9 +16,9 @@ one list.
 
 ## Decision
 
-Restructure the skill as an ordered, six-stage pipeline: **generate → mentally
+Restructure the project as an ordered, six-stage pipeline: **generate → mentally
 compile → lint → review → refactor → final audit**. Each stage has exactly
-one job. Stages 3 and 6 both run the same script (`check.py`) — see
+one job. Stages 3 and 6 both run the same command (`slop-guard`) — see
 [ADR 0002](0002-stage6-reruns-stage3.md) for why that specific pairing
 matters. Stages 2, 4 are pure-reasoning steps with no tool support, by
 design — see [ADR 0004](0004-why-no-autofix.md) for the related decision not

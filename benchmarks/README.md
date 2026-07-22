@@ -1,14 +1,14 @@
 # Benchmarks
 
 Methodology: clone a real, independently-written codebase and run
-`check.py` against it. What matters isn't "0 findings" — a clean run on
+`slop-guard` against it. What matters isn't "0 findings" — a clean run on
 code nobody wrote to please a linter is the useful signal. What matters is
 the false-positive count, since that's what decides whether the tool
 survives a week of actual use.
 
 ## Small fixture: violations_demo.py
 
-`check.py --json` on `examples/violations_demo.py`, before and after
+`slop-guard --json` on `examples/violations_demo.py`, before and after
 applying its own suggested fixes. Reproduce:
 
 ```bash
@@ -55,7 +55,7 @@ syntax, so it had no way to know either pattern counted as "used".
 
 ### Fix
 
-`check.py` now excludes, from ASG002, any module-level function that has a
+`slop-guard` now excludes, from ASG002, any module-level function that has a
 decorator (`@app.route`, `@click.command`, `@pytest.fixture`, ...) or
 matches the `test_*` naming convention — the same reasoning class methods
 were already excluded for.

@@ -6,7 +6,7 @@ Accepted (0.1.0), reaffirmed (0.2.0)
 
 ## Context
 
-Every rule `check.py` verifies has an obvious mechanical fix in the common
+Every rule `slop-guard` verifies has an obvious mechanical fix in the common
 case — delete the unused import, delete the dead function, remove the
 `print()`. It would be straightforward to add a `--fix` flag that applies
 these edits automatically, the way `ruff --fix` or `eslint --fix` do. This
@@ -14,7 +14,7 @@ was considered and rejected, at least for now.
 
 ## Decision
 
-`check.py` only reports findings — path, line, rule ID, reason, suggested
+`slop-guard` only reports findings — path, line, rule ID, reason, suggested
 fix as text. It never edits a file. Applying the fix is stage 5 (Refactor)
 in the pipeline, done by the agent (or a human) reading stage 3's/6's
 output. The script itself never edits a file.

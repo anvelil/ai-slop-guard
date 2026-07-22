@@ -21,7 +21,7 @@ delete it — don't comment it out or leave it "just in case".
 Exception: public library API, where the function is part of the contract.
 Mark it `@deprecated` with a reason instead of deleting it.
 
-**Script coverage:** `check.py` flags module-level, undecorated,
+**Script coverage:** `slop-guard` (`cli.py`) flags module-level, undecorated,
 non-`test_*` functions that are never referenced anywhere else *in the same
 file*. Class methods, decorated functions (`@app.route`, `@pytest.fixture`,
 ...) and pytest-style `test_*` functions are excluded — they're almost
@@ -87,7 +87,7 @@ the import behind.
 
 Exception: a name imported only to re-export it via `__all__` is a real
 use, even though it's never referenced by name anywhere else in the file —
-that's the whole point of `__all__`. Since 0.3.0 the script recognizes
+that's the whole point of `__all__`. Since 0.2.0 the script recognizes
 string literals listed in a module-level `__all__` as uses; see
 `docs/known-limitations.md` for what's still not understood (a
 dynamically built `__all__`).

@@ -40,7 +40,7 @@ check instead of trusting the tool blindly.
 
 - Correct for standard `import` / `from ... import ...` usage detected via
   `ast`, which is reliable — it's not a text/regex match.
-- **Fixed in 0.3.0:** a module-level `__all__ = [...]` (or `__all__ +=
+- **Fixed in 0.2.0:** a module-level `__all__ = [...]` (or `__all__ +=
   [...]`, or an annotated `__all__: list[str] = [...]`) is now read, and
   any string literal it contains counts as a use — a name imported purely
   to re-export it via `__all__` is no longer flagged. Only plain string

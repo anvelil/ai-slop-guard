@@ -13,7 +13,7 @@ Both options were considered and rejected.
 
 ## Decision
 
-`src/ai_slop_guard/cli.py` and `scripts/generate_registry.py` use only the Python
+`src/ai_slop_guard/cli.py` and `src/ai_slop_guard/generate_registry.py` use only the Python
 standard library (`ast`, `json`, `re`, `pathlib`). No `pip install`, no
 `npm install`, no network access, at any point.
 
