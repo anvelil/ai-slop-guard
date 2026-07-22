@@ -84,7 +84,7 @@ def main() -> int:
             lines.append("")
 
     OUT.write_text("\n".join(lines), encoding="utf-8")
-    print(f"wrote {OUT}")
+    print(f"wrote {OUT}")  # slop-guard: ignore
     return 0
 
 
