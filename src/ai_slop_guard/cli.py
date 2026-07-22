@@ -16,6 +16,8 @@ Exit code is non-zero if any finding was reported, so this is safe to use
 as a CI gate.
 """
 
+from __future__ import annotations
+
 import ast
 import json
 import re
