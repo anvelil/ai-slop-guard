@@ -1,0 +1,10 @@
+[
+  {
+    "path": "input.py",
+    "line": 5,
+    "rule_id": "ASG001",
+    "title": "Unused import \"truly_unused\"",
+    "reason": "'truly_unused' is imported on line 5 but never referenced.",
+    "fix": "Remove the import of 'truly_unused'."
+  }
+]

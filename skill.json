@@ -1,7 +1,7 @@
 {
   "name": "ai-slop-guard",
   "tagline": "An AI code quality pipeline built around a 6-stage review sequence",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "6-stage code quality pipeline (generate, mentally compile, lint, review, refactor, final audit) that catches common AI-agent code smells before a diff is considered done. The pipeline is the distinctive part; the rule set is what stages 3 and 6 use to do their job.",
   "license": "MIT",
   "pipeline_stages": 6,

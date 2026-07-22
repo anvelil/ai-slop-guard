@@ -78,8 +78,23 @@ After any edit, every import in the files you touched should be used.
 This especially slips through after a refactor that deleted code but left
 the import behind.
 
-**Script coverage:** yes, for Python (via `ast`) and best-effort for JS/TS
-(via static import-statement + usage-count matching).
+```diff
+- import os
+- from .helpers import public_helper, unused_helper
++ from .helpers import public_helper
+  __all__ = ["public_helper"]
+```
+
+Exception: a name imported only to re-export it via `__all__` is a real
+use, even though it's never referenced by name anywhere else in the file —
+that's the whole point of `__all__`. Since 0.3.0 the script recognizes
+string literals listed in a module-level `__all__` as uses; see
+`docs/known-limitations.md` for what's still not understood (a
+dynamically built `__all__`).
+
+**Script coverage:** yes, for Python (via `ast`, including `__all__`
+re-exports) and best-effort for JS/TS (via static import-statement +
+usage-count matching).
 
 ## ASG005 — Unnecessary defensive checks
 

@@ -9,6 +9,23 @@ Two version numbers move independently here:
   change to what it flags. A false-positive fix within a rule's existing
   scope does not bump it.
 
+## 0.3.0 — rule set v1.0.0
+
+### Fixed
+
+- ASG001 no longer flags an import used only to re-export it via a
+  module-level `__all__` (e.g. `from .helpers import public_helper` with
+  `__all__ = ["public_helper"]` and no other reference in the file).
+  String literals inside `__all__ = [...]`, `__all__ += [...]`, and an
+  annotated `__all__: list[str] = [...]` are now read and counted as uses.
+  A dynamically built `__all__` (list comprehension, `.extend(...)`, etc.)
+  is still not understood — see `docs/known-limitations.md`. This does not
+  bump `rule_set_version`: it's a false-positive fix within ASG001's
+  existing stated scope, not a change to what the rule covers.
+- Added `tests/golden/dunder_all_reexport/` and corrected a stale test
+  count in `CONTRIBUTING.md` (hardcoded "6/6" no longer matched the actual
+  golden suite size and would have drifted again).
+
 ## 0.2.0 — rule set v1.0.0
 
 ### Added

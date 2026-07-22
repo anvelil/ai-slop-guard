@@ -48,7 +48,7 @@ import os
 os.environ['DEBUG'] = '1'  # used -> not flagged
 ```
 
-**Tradeoffs:** No known false positives on plain import/from-import. Python's __all__ re-exports and TYPE_CHECKING-only imports are not understood yet -- see docs/known-limitations.md.
+**Tradeoffs:** No known false positives on plain import/from-import. Python's __all__ re-exports (string literals only -- `__all__ = ["x"]` or `+= [...]`) are recognized as a use since 0.3.0. Dynamically built __all__ (e.g. a list comprehension) and TYPE_CHECKING-only imports used solely in string annotations are still not understood -- see docs/known-limitations.md.
 
 ### ASG002 — Dead code (module-level candidate) (experimental)
 

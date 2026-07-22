@@ -82,6 +82,35 @@ class Finding:
         )
 
 
+def _collect_dunder_all_exports(tree: ast.AST) -> set[str]:
+    """Names listed in a module-level `__all__` (via `=` or `+=`) count as
+    used -- that's the whole point of `__all__`: re-exporting a name that
+    is otherwise never referenced by name in this file. Only plain string
+    literals are understood; anything built dynamically (e.g.
+    `__all__ = [x.__name__ for x in ...]`) is not resolved and is left
+    exactly as before -- no guessing, per docs/philosophy.md."""
+    exported: set[str] = set()
+
+    def _names_from(value: ast.AST) -> None:
+        if isinstance(value, (ast.List, ast.Tuple, ast.Set)):
+            for elt in value.elts:
+                if isinstance(elt, ast.Constant) and isinstance(elt.value, str):
+                    exported.add(elt.value)
+
+    for node in ast.iter_child_nodes(tree):  # module level only
+        if isinstance(node, ast.Assign):
+            if any(isinstance(t, ast.Name) and t.id == "__all__" for t in node.targets):
+                _names_from(node.value)
+        elif isinstance(node, ast.AugAssign):
+            if isinstance(node.target, ast.Name) and node.target.id == "__all__":
+                _names_from(node.value)
+        elif isinstance(node, ast.AnnAssign):
+            if isinstance(node.target, ast.Name) and node.target.id == "__all__" and node.value:
+                _names_from(node.value)
+
+    return exported
+
+
 def check_python(path: Path, source: str) -> list[Finding]:
     findings: list[Finding] = []
     try:
@@ -111,6 +140,7 @@ def check_python(path: Path, source: str) -> list[Finding]:
                 imported[name] = node.lineno
 
     used_names = {n.id for n in ast.walk(tree) if isinstance(n, ast.Name)}
+    used_names |= _collect_dunder_all_exports(tree)
 
     for name, lineno in imported.items():
         if name not in used_names:

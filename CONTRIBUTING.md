@@ -66,5 +66,5 @@ adding heuristics that guess), or the case needs documenting in
 python3 ai-slop-guard/scripts/check.py examples/violations_demo.py       # should find 6 issues
 python3 ai-slop-guard/scripts/check.py examples/violations_demo_fixed.py # should find 0
 python3 ai-slop-guard/scripts/check.py ai-slop-guard/scripts/check.py    # should find 0 (self-check)
-python3 -m unittest tests.test_golden -v                                  # should pass, 6/6
+python3 -m unittest tests.test_golden -v                                  # should pass, all green
 ```

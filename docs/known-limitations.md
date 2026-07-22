@@ -40,10 +40,15 @@ check instead of trusting the tool blindly.
 
 - Correct for standard `import` / `from ... import ...` usage detected via
   `ast`, which is reliable — it's not a text/regex match.
-- Does **not** currently understand `__all__` re-exports: a module that
-  imports a name purely to re-export it via `__all__` will be flagged even
-  though the import is intentional. Mark such lines with
-  `# slop-guard: ignore` for now.
+- **Fixed in 0.3.0:** a module-level `__all__ = [...]` (or `__all__ +=
+  [...]`, or an annotated `__all__: list[str] = [...]`) is now read, and
+  any string literal it contains counts as a use — a name imported purely
+  to re-export it via `__all__` is no longer flagged. Only plain string
+  literals inside a list/tuple/set are understood; nothing is evaluated.
+- Still **not** understood: an `__all__` built dynamically — a list
+  comprehension, a call to `.extend(...)`, names computed at runtime — is
+  left exactly as before (false positive on the re-exported name). Mark
+  such lines with `# slop-guard: ignore` for now.
 - Does not understand `TYPE_CHECKING`-guarded imports used only in string
   type annotations — same workaround applies.
 
