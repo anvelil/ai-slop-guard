@@ -121,6 +121,8 @@ def check_python(path: Path, source: str) -> list[Finding]:
                 name = alias.asname or alias.name.split(".")[0]
                 imported[name] = node.lineno
         elif isinstance(node, ast.ImportFrom):
+            if node.module == "__future__":
+                continue
             for alias in node.names:
                 if alias.name == "*":
                     continue
