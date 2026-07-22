@@ -8,7 +8,7 @@ numbers these came from.
 ## flask_route_handler.py
 
 ```bash
-python3 ai-slop-guard/scripts/check.py examples/real-world/flask_route_handler.py
+slop-guard examples/real-world/flask_route_handler.py
 # -> no findings
 ```
 

@@ -6,21 +6,21 @@ Accepted (0.1.0), reaffirmed (0.2.0)
 
 ## Context
 
-`scripts/check.py` could be more powerful with real parsers for TypeScript
+`src/ai_slop_guard/cli.py` could be more powerful with real parsers for TypeScript
 (e.g. via a Node-based AST) or a proper multi-language framework. It could
 also lean on existing linters (`ruff`, `eslint`) and just wrap their output.
 Both options were considered and rejected.
 
 ## Decision
 
-`scripts/check.py` and `scripts/generate_registry.py` use only the Python
+`src/ai_slop_guard/cli.py` and `scripts/generate_registry.py` use only the Python
 standard library (`ast`, `json`, `re`, `pathlib`). No `pip install`, no
 `npm install`, no network access, at any point.
 
 In order of weight:
 
 1. **Trust.** An agent — or a human — running this tool is told, in
-   `SKILL.md` and the README, that it's "safe to run without asking". That
+   the README, that it's "safe to run without asking". That
    claim is only true because there is nothing to install and nothing that
    phones home. Adding a dependency, even a well-known one, breaks that
    guarantee: now running the checker means trusting a supply chain, not

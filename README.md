@@ -14,7 +14,7 @@ an agent review itself before calling a task done:
 
 **generate → mentally compile → lint → review → refactor → final audit.**
 
-`scripts/check.py` — real static analysis, `ast`-based, stdlib only, no
+`src/ai_slop_guard/cli.py` — real static analysis, `ast`-based, stdlib only, no
 installs, no network — is stage 3. It's the least interesting part of this
 repo, honestly. The sequencing is the actual point: an agent that fixes
 what the linter found is *also* the agent most likely to break something
@@ -72,58 +72,20 @@ tell you it works.
 ## What's inside
 
 ```
-ai-slop-guard/
-├── SKILL.md                    # entry point — frontmatter + the 6-stage pipeline
-├── data/rules.json             # rule IDs, status, reasoning per rule
-├── scripts/
-│   ├── check.py                 # the actual static analysis
-│   └── generate_registry.py     # regenerates references/registry.md
+src/ai_slop_guard/
+├── cli.py                       # the actual static analysis
+├── generate_registry.py         # regenerates references/registry.md
+├── data/rules.json              # rule IDs, status, reasoning per rule
 └── references/
     ├── rules.md                 # before/after per rule
     └── registry.md              # generated coverage table
 docs/
 ├── philosophy.md                # why these rules, and not others
 ├── known-limitations.md         # every known false positive, with examples
-└── adr/                          # a few decisions worth explaining
+└── adr/                         # a few decisions worth explaining
 benchmarks/
 └── README.md                    # the Flask run, in full
-examples/ · tests/ · .github/workflows/ci.yml
-```
-
-`ai-slop-guard/` is a self-contained Claude Skill — copy that folder
-wherever Claude Code looks for skills and it activates automatically.
-Everything else (`.cursor/`, root `CLAUDE.md`) just points other tools at
-the same folder.
-
-## Installing it
-
-**Claude Code:**
-
-```bash
-mkdir -p .claude/skills
-cp -r ai-slop-guard .claude/skills/
-```
-
-**Cursor:**
-
-```bash
-mkdir -p .cursor/rules
-cp .cursor/rules/ai-slop-guard.mdc <your-project>/.cursor/rules/
-cp -r ai-slop-guard <your-project>/
-```
-
-**Anything that reads a root `CLAUDE.md` / system prompt:**
-
-```bash
-cp CLAUDE.md <your-project>/
-cp -r ai-slop-guard <your-project>/
-```
-
-**Just the checker, no agent involved:**
-
-```bash
-python3 ai-slop-guard/scripts/check.py path/to/your/code
-python3 ai-slop-guard/scripts/check.py --json path/to/your/code
+examples/ · tests/ · .github/workflows/main.yml
 ```
 
 ## The pipeline itself
@@ -132,12 +94,10 @@ python3 ai-slop-guard/scripts/check.py --json path/to/your/code
 |---|---|---|
 | 1. Generate | Write the solution | — |
 | 2. Compile mentally | Read it back before running it — names resolve, arities match, branches return what's expected | No, pure reasoning |
-| 3. Lint | Run `check.py` on the diff | Yes |
+| 3. Lint | Run `slop-guard` on the diff | Yes |
 | 4. Review | Duplicated logic, defensive checks a type already rules out, comments that just restate the code | No, needs project context |
 | 5. Refactor | Fix what 3–4 found, structure only | — |
 | 6. Final audit | Re-run stage 3's command — the count must not go up | Yes |
-
-Full instructions: `ai-slop-guard/SKILL.md`.
 
 ## The rules, as of now
 
@@ -153,7 +113,7 @@ Full instructions: `ai-slop-guard/SKILL.md`.
 | ASG008 | Hallucinated API usage | planned — not implemented |
 
 ```bash
-python3 ai-slop-guard/scripts/check.py --explain ASG002   # full reasoning for one rule
+slop-guard --explain ASG002   # full reasoning for one rule
 ```
 
 ## If it flags something that isn't actually a problem
@@ -166,14 +126,32 @@ than silencing something you haven't actually looked at.
 
 Python 3.9+. Nothing else — no packages, no network access, ever.
 
+## Installation
+
+```bash
+# Install directly from github:
+pip install git+https://github.com/your-repo/ai-slop-guard.git
+```
+
+### Pre-commit hook
+You can add `ai-slop-guard` to your `.pre-commit-config.yaml`:
+
+```yaml
+repos:
+  - repo: https://github.com/your-repo/ai-slop-guard
+    rev: v0.2.0
+    hooks:
+      - id: slop-guard
+```
+
 ## Try it yourself
 
 ```bash
-python3 ai-slop-guard/scripts/check.py examples/violations_demo.py         # 6 findings
-python3 ai-slop-guard/scripts/check.py examples/violations_demo_fixed.py   # 0
-python3 ai-slop-guard/scripts/check.py examples/real-world/flask_route_handler.py  # 0
-python3 ai-slop-guard/scripts/check.py examples/false-positive/cross_file_call.py  # 1, documented
-python3 -m unittest tests.test_golden -v                                   # 8/8
+slop-guard examples/violations_demo.py         # 6 findings
+slop-guard examples/violations_demo_fixed.py   # 0
+slop-guard examples/real-world/flask_route_handler.py  # 0
+slop-guard examples/false-positive/cross_file_call.py  # 1, documented
+python3 -m unittest tests.test_golden -v               # 8/8
 ```
 
 ## Contributing
@@ -181,7 +159,7 @@ python3 -m unittest tests.test_golden -v                                   # 8/8
 If you want to propose a rule, I need a real reproducible pattern (not
 "write cleaner code"), an entry in `data/rules.json`, a before/after in
 `references/rules.md`, and — if it can be checked mechanically — a test in
-`scripts/check.py` that doesn't false-positive on its own code. See
+`src/ai_slop_guard/cli.py` that doesn't false-positive on its own code. See
 `CONTRIBUTING.md`.
 
 ## License

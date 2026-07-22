@@ -1,6 +1,6 @@
 import os
 import sys
-import json  # used below
+import json
 
 def get_user(uid):
     try:

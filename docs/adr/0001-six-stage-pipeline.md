@@ -6,8 +6,8 @@ Accepted (0.2.0)
 
 ## Context
 
-The project started (0.1.0) as a flat checklist of 7 rules in a single
-`CLAUDE.md`. In practice, an agent given a flat list applies it
+The project started (0.1.0) as a flat checklist of 7 rules.
+In practice, an agent given a flat list applies it
 inconsistently — some rules get checked, some get forgotten, and there's no
 natural point at which "the task is done" versus "I should go back and
 check again". There was also no distinction between things a static script
@@ -26,7 +26,7 @@ to auto-fix.
 
 ## Consequences
 
-- The skill's `SKILL.md` frontmatter and structure now describe a sequence,
+- The pipeline structure now describes a sequence,
   not a bag of rules — an agent following it can't as easily skip a step
   without it being visible in what it produces (e.g., no stage-3 output to
   compare stage 6 against).

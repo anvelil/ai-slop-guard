@@ -1,22 +1,6 @@
 #!/usr/bin/env python3
 """
 tests/test_golden.py
-
-Runs ai-slop-guard/scripts/check.py --json against every fixture in
-tests/golden/<case>/input.py and compares it byte-for-byte against
-tests/golden/<case>/expected.json. If the checker's output ever changes
-for these fixtures — a new finding, a changed message, a fixed false
-positive — this test fails and shows exactly what changed, on purpose:
-that's the point of a golden test, catching drift you didn't mean to
-introduce.
-
-Uses only the standard library (unittest, json, subprocess) — no pytest,
-no dependencies to install, consistent with the rest of this project.
-
-Usage:
-    python3 -m unittest tests.test_golden -v
-    # or just:
-    python3 tests/test_golden.py
 """
 
 import json
@@ -26,7 +10,7 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-CHECK_PY = ROOT / "ai-slop-guard" / "scripts" / "check.py"
+CHECK_PY = ROOT / "src" / "ai_slop_guard" / "cli.py"
 GOLDEN_DIR = Path(__file__).resolve().parent / "golden"
 
 
@@ -39,14 +23,6 @@ class GoldenTests(unittest.TestCase):
 
 
 def _normalize(findings: list) -> list:
-    """Findings with rule_id == "PARSE" wrap CPython's own SyntaxError
-    message and line number, which differ between the pre-3.10 parser and
-    the PEG parser introduced in 3.10 (e.g. "unexpected EOF while parsing"
-    on 3.9 vs. "'(' was never closed" on 3.10+, often at a different line).
-    That's a difference in the Python interpreter running the test, not in
-    check.py's own logic, so it's not something a golden fixture should
-    pin across versions. Every other rule_id is still compared exactly,
-    including its line number and reason."""
     normalized = []
     for f in findings:
         if f.get("rule_id") == "PARSE":
@@ -73,7 +49,7 @@ def _make_test(case_dir: Path):
         self.assertEqual(
             _normalize(actual),
             _normalize(expected),
-            f"\ncheck.py output for {case_dir.name}/input.py drifted from "
+            f"\nslop-guard output for {case_dir.name}/input.py drifted from "
             f"expected.json.\nIf this drift is intentional (e.g. you fixed a "
             f"false positive or improved a message), regenerate the golden "
             f"file with:\n"

@@ -6,7 +6,7 @@ to demonstrate a rule in the normal sense.
 ## decorator_without_parens.py
 
 ```bash
-python3 ai-slop-guard/scripts/check.py examples/edge-cases/decorator_without_parens.py
+slop-guard examples/edge-cases/decorator_without_parens.py
 # -> no findings
 ```
 
@@ -20,7 +20,7 @@ fixed. This fixture is also a golden test:
 ## syntax_error.py
 
 ```bash
-python3 ai-slop-guard/scripts/check.py examples/edge-cases/syntax_error.py
+slop-guard examples/edge-cases/syntax_error.py
 ```
 
 Deliberately invalid Python. Confirms the checker reports a `PARSE`

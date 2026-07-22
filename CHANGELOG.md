@@ -2,40 +2,20 @@
 
 Two version numbers move independently here:
 
-- **Project version** (`skill.json` → `version`) — the pipeline/tooling as
+- **Project version** — the pipeline/tooling as
   a whole.
 - **Rule set version** (`ai-slop-guard/data/rules.json` → `rule_set_version`,
   semver) — bumps only when a rule is added, removed, or has a breaking
   change to what it flags. A false-positive fix within a rule's existing
   scope does not bump it.
 
-## 0.3.0 — rule set v1.0.0
-
-### Fixed
-
-- ASG001 no longer flags an import used only to re-export it via a
-  module-level `__all__` (e.g. `from .helpers import public_helper` with
-  `__all__ = ["public_helper"]` and no other reference in the file).
-  String literals inside `__all__ = [...]`, `__all__ += [...]`, and an
-  annotated `__all__: list[str] = [...]` are now read and counted as uses.
-  A dynamically built `__all__` (list comprehension, `.extend(...)`, etc.)
-  is still not understood — see `docs/known-limitations.md`. This does not
-  bump `rule_set_version`: it's a false-positive fix within ASG001's
-  existing stated scope, not a change to what the rule covers.
-- Added `tests/golden/dunder_all_reexport/` and corrected a stale test
-  count in `CONTRIBUTING.md` (hardcoded "6/6" no longer matched the actual
-  golden suite size and would have drifted again).
-- `tests/test_golden.py` no longer compares the exact line/reason text of
-  `PARSE` findings: CPython's own `SyntaxError` message and line number
-  for the same malformed file differ between the pre-3.10 parser and the
-  PEG parser introduced in 3.10 (surfaced by the CI matrix's Python 3.9
-  job — `rule_id`/`title` still compared exactly for every rule).
-
 ## 0.2.0 — rule set v1.0.0
 
 ### Added
-
-- 6-stage pipeline in `SKILL.md` (generate → mentally compile → lint →
+- **Python Packaging**: The project is now a standard Python package (`pyproject.toml`) and can be installed via `pip install .`.
+- **CLI Command**: Exposed `slop-guard` command globally after installation.
+- **Pre-commit integration**: Added `.pre-commit-hooks.yaml` for easy integration into pre-commit workflows.
+- 6-stage pipeline (generate → mentally compile → lint →
   review → refactor → final audit), replacing the flat 7-rule checklist
   from 0.1.0. See `docs/adr/0001-six-stage-pipeline.md`.
 - Stable rule IDs (`ASG001`–`ASG008`), a lifecycle `status` per rule
@@ -59,10 +39,28 @@ Two version numbers move independently here:
 
 ### Changed
 
-- `check.py` findings now carry a rule ID, `Reason`, and `Suggested fix`,
+- Standardized package structure by moving code to `src/ai_slop_guard`.
+- Removed all "AI slop" from the project itself (excessive explaining comments, AI-agent instructions like `CLAUDE.md`, `SKILL.md`). The project is now a clean, standalone linter.
+- `check.py` (now `cli.py`) findings now carry a rule ID, `Reason`, and `Suggested fix`,
   not a one-line message.
 - README repositioned around the pipeline as the main idea, with
-  `check.py` and the rule set framed as what supports stages 3 and 6.
+  `slop-guard` and the rule set framed as what supports stages 3 and 6.
+
+### Fixed
+
+- ASG001 no longer flags an import used only to re-export it via a
+  module-level `__all__` (e.g. `from .helpers import public_helper` with
+  `__all__ = ["public_helper"]` and no other reference in the file).
+  String literals inside `__all__ = [...]`, `__all__ += [...]`, and an
+  annotated `__all__: list[str] = [...]` are now read and counted as uses.
+  A dynamically built `__all__` (list comprehension, `.extend(...)`, etc.)
+  is still not understood — see `docs/known-limitations.md`.
+- Added `tests/golden/dunder_all_reexport/` and corrected a stale test
+  count in `CONTRIBUTING.md`.
+- `tests/test_golden.py` no longer compares the exact line/reason text of
+  `PARSE` findings: CPython's own `SyntaxError` message and line number
+  for the same malformed file differ between the pre-3.10 parser and the
+  PEG parser introduced in 3.10.
 
 ### Fixed
 
@@ -89,8 +87,7 @@ Two version numbers move independently here:
 
 ### Added
 
-- Initial release: 7 rules as a flat checklist in `CLAUDE.md`, with a
-  Cursor `.mdc` adapter. `check.py` covered unused imports, catch-all
+- Initial release: 7 rules as a flat checklist. `check.py` covered unused imports, catch-all
   exception handling, leftover debug output, and file-local dead-code
   candidates.
 

@@ -7,7 +7,7 @@ prose. Cross-reference: `docs/known-limitations.md`.
 ## cross_file_call.py
 
 ```bash
-python3 ai-slop-guard/scripts/check.py examples/false-positive/cross_file_call.py
+slop-guard examples/false-positive/cross_file_call.py
 ```
 
 Flags `init_app` as ASG002 dead code. In the real project this is adapted

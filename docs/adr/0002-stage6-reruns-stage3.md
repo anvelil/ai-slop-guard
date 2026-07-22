@@ -19,8 +19,8 @@ things worse than stage 3 found them.
 ## Decision
 
 Stage 6 (Final audit) runs the identical command as stage 3 (Lint):
-`python3 ai-slop-guard/scripts/check.py <file_or_dir>`. The rule in
-`SKILL.md` is explicit: the finding count at stage 6 must not exceed the
+`slop-guard <file_or_dir>`. The rule in
+The pipeline is explicit: the finding count at stage 6 must not exceed the
 finding count at stage 3. If it does, the refactor introduced new slop, and
 the task is not done — fix it before finishing, don't carry it forward.
 
