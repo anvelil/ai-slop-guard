@@ -38,6 +38,23 @@ class GoldenTests(unittest.TestCase):
     pass
 
 
+def _normalize(findings: list) -> list:
+    """Findings with rule_id == "PARSE" wrap CPython's own SyntaxError
+    message and line number, which differ between the pre-3.10 parser and
+    the PEG parser introduced in 3.10 (e.g. "unexpected EOF while parsing"
+    on 3.9 vs. "'(' was never closed" on 3.10+, often at a different line).
+    That's a difference in the Python interpreter running the test, not in
+    check.py's own logic, so it's not something a golden fixture should
+    pin across versions. Every other rule_id is still compared exactly,
+    including its line number and reason."""
+    normalized = []
+    for f in findings:
+        if f.get("rule_id") == "PARSE":
+            f = {**f, "line": None, "reason": None}
+        normalized.append(f)
+    return normalized
+
+
 def _make_test(case_dir: Path):
     def test(self):
         input_file = case_dir / "input.py"
@@ -54,8 +71,8 @@ def _make_test(case_dir: Path):
         actual = json.loads(result.stdout)
         expected = json.loads(expected_file.read_text(encoding="utf-8"))
         self.assertEqual(
-            actual,
-            expected,
+            _normalize(actual),
+            _normalize(expected),
             f"\ncheck.py output for {case_dir.name}/input.py drifted from "
             f"expected.json.\nIf this drift is intentional (e.g. you fixed a "
             f"false positive or improved a message), regenerate the golden "

@@ -25,6 +25,11 @@ Two version numbers move independently here:
 - Added `tests/golden/dunder_all_reexport/` and corrected a stale test
   count in `CONTRIBUTING.md` (hardcoded "6/6" no longer matched the actual
   golden suite size and would have drifted again).
+- `tests/test_golden.py` no longer compares the exact line/reason text of
+  `PARSE` findings: CPython's own `SyntaxError` message and line number
+  for the same malformed file differ between the pre-3.10 parser and the
+  PEG parser introduced in 3.10 (surfaced by the CI matrix's Python 3.9
+  job — `rule_id`/`title` still compared exactly for every rule).
 
 ## 0.2.0 — rule set v1.0.0
 
