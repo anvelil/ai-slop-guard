@@ -57,6 +57,6 @@ jobs:
 
       - name: Registry is in sync with data/rules.json
         run: |
-          python3 -m ai_slop_guard.generate_registry
+          python3 src/ai_slop_guard/generate_registry.py
           git diff --exit-code src/ai_slop_guard/references/registry.md || \
             (echo "::error::references/registry.md is out of date — run generate_registry.py and commit the result" && exit 1)
