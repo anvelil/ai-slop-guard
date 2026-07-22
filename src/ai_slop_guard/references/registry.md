@@ -48,7 +48,7 @@ import os
 os.environ['DEBUG'] = '1'  # used -> not flagged
 ```
 
-**Tradeoffs:** No known false positives on plain import/from-import. Python's __all__ re-exports (string literals only -- `__all__ = ["x"]` or `+= [...]`) are recognized as a use since 0.3.0. Dynamically built __all__ (e.g. a list comprehension) and TYPE_CHECKING-only imports used solely in string annotations are still not understood -- see docs/known-limitations.md.
+**Tradeoffs:** No known false positives on plain import/from-import. Python's __all__ re-exports (string literals only -- `__all__ = ["x"]` or `+= [...]`) are recognized as a use since 0.2.0. Dynamically built __all__ (e.g. a list comprehension) and TYPE_CHECKING-only imports used solely in string annotations are still not understood -- see docs/known-limitations.md.
 
 ### ASG002 — Dead code (module-level candidate) (experimental)
 
@@ -116,7 +116,7 @@ function formatDate(d) { return d.toISOString().split('T')[0]; }
 // single shared implementation -> nothing to flag
 ```
 
-**Tradeoffs:** Manual for now вЂ” no design work has started on making this script-verifiable. Whole-project indexing plus some notion of semantic similarity would be needed; not attempted yet.
+**Tradeoffs:** Manual for now — no design work has started on making this script-verifiable. Whole-project indexing plus some notion of semantic similarity would be needed; not attempted yet.
 
 ### ASG005 — Unnecessary defensive checks (planned)
 
@@ -141,7 +141,7 @@ function getFullName(user: User | null): string {
 // user can genuinely be null here -> not unnecessary
 ```
 
-**Tradeoffs:** Manual for now. Would need a resolved type checker's output, not syntax alone вЂ” nothing built yet.
+**Tradeoffs:** Manual for now. Would need a resolved type checker's output, not syntax alone — nothing built yet.
 
 ### ASG006 — Comments that restate the code (planned)
 
@@ -162,7 +162,7 @@ counter += 1;
 // explains 'why' -> not flagged
 ```
 
-**Tradeoffs:** Manual, and likely to stay that way вЂ” this is closer to a judgment call than a rule.
+**Tradeoffs:** Manual, and likely to stay that way — this is closer to a judgment call than a rule.
 
 ### ASG007 — Leftover debug output (stable)
 
@@ -190,7 +190,7 @@ def add(a, b):
 
 ### ASG008 — Hallucinated API usage (planned)
 
-Code calls a method/attribute/parameter that does not exist on the referenced type or library version. Not implemented: reliably detecting this needs resolved type information or the actual library's API surface вЂ” single-file static analysis alone isn't enough.
+Code calls a method/attribute/parameter that does not exist on the referenced type or library version. Not implemented: reliably detecting this needs resolved type information or the actual library's API surface — single-file static analysis alone isn't enough.
 
 **Why:** One of the most common and costly agent mistakes -- confidently calling a plausible-sounding method that was never real, or that existed in a different library version -- and one of the hardest to catch without running the code.
 
