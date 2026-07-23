@@ -35,6 +35,9 @@ check instead of trusting the tool blindly.
   the file). The script has no project-wide view, so this always needs a
   human check — treat every ASG002 finding as "verify", never "confirmed dead".
   Live, runnable reproduction: `examples/false-positive/cross_file_call.py`.
+- **Fixed in 0.3.1:** a function that only calls itself (recursion) used to
+  always count as "used". A recursive function never called from anywhere
+  else in the file is now flagged.
 
 ## ASG001 — unused imports (Python)
 
@@ -45,6 +48,16 @@ check instead of trusting the tool blindly.
   any string literal it contains counts as a use — a name imported purely
   to re-export it via `__all__` is no longer flagged. Only plain string
   literals inside a list/tuple/set are understood; nothing is evaluated.
+- **Fixed in 0.3.1:** name usage now only counts `Load` context. Previously
+  `import json` followed by `json = 5`, never read afterward, still counted
+  as used, because the reassignment target is an `ast.Name` node too.
+- **Still not scope-aware.** The check asks "is this identifier read
+  anywhere in the file", not "is this specific import read where it's in
+  scope". A same-named local variable, parameter, loop variable, or
+  `except ... as` binding still masks a genuinely unused module-level
+  import as long as it's read somewhere in the file. Fixing this properly
+  needs a symbol table, which the stdlib-only, single-pass design
+  deliberately skips — see `docs/adr/0003-why-stdlib-only.md`.
 - Still **not** understood: an `__all__` built dynamically — a list
   comprehension, a call to `.extend(...)`, names computed at runtime — is
   left exactly as before (false positive on the re-exported name). Mark
@@ -75,19 +88,24 @@ check instead of trusting the tool blindly.
 - Does not evaluate whether the specific exception type caught is
   appropriate — only whether the body looks like it's doing nothing with
   the error.
+- **Can't tell logging from real recovery.** A single-call body is flagged
+  either way, whether the call is `logger.warning(...)` or
+  `rollback_transaction()`. Since 0.3.1 the message reflects that
+  uncertainty instead of asserting the error was silently swallowed.
 
 ## ASG007 — leftover debug output
 
 - AST-based for Python — it matches real `print(...)` calls only, so it
   won't be fooled by the word "print" appearing in a string or docstring.
-- The `# slop-guard: ignore` / `// slop-guard: ignore` marker suppresses
-  any finding on that line; it isn't scoped to a single rule. Say why you're
-  using it — in a commit message or a trailing comment — so a future reader
-  can tell it was a deliberate call rather than a finding silenced to quiet
-  the tool.
 
 ## General
 
+- **Fixed in 0.3.1:** `# slop-guard: ignore` used to only suppress ASG007
+  and the JS/TS checks — ASG001, ASG002, and ASG003 in Python ignored it.
+  It now suppresses any finding on the marked line, for every rule. Say
+  why you're using it — in a commit message or a trailing comment — so a
+  future reader can tell it was a deliberate call rather than a finding
+  silenced to quiet the tool.
 - The script analyzes **one file at a time**. Anything that requires
   cross-file knowledge (ASG004 duplicated logic, whether an ASG002 candidate
   is really dead, whether an ASG005 guard is really unnecessary given the

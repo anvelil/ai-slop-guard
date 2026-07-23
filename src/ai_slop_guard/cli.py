@@ -129,11 +129,14 @@ def check_python(path: Path, source: str) -> list[Finding]:
                 name = alias.asname or alias.name
                 imported[name] = node.lineno
 
-    used_names = {n.id for n in ast.walk(tree) if isinstance(n, ast.Name)}
+    used_names = {
+        n.id for n in ast.walk(tree)
+        if isinstance(n, ast.Name) and isinstance(n.ctx, ast.Load)
+    }
     used_names |= _collect_dunder_all_exports(tree)
 
     for name, lineno in imported.items():
-        if name not in used_names:
+        if name not in used_names and not _is_ignored(source_lines, lineno):
             findings.append(
                 Finding(
                     path, lineno, "ASG001", f'Unused import "{name}"',
@@ -154,13 +157,23 @@ def check_python(path: Path, source: str) -> list[Finding]:
             bare_or_broad = node.type is None or (
                 isinstance(node.type, ast.Name) and node.type.id == "Exception"
             )
-            if bare_or_broad and (is_trivial or is_log_only):
+            if bare_or_broad and (is_trivial or is_log_only) and not _is_ignored(source_lines, node.lineno):
                 exc_kind = "bare except" if node.type is None else "except Exception"
+                if is_trivial:
+                    reason = (
+                        "This except block only passes or continues — it silently "
+                        "swallows whatever error occurs instead of handling it."
+                    )
+                else:
+                    reason = (
+                        "This except block's body is a single call — usually logging, "
+                        "but could be real recovery code (rollback, cleanup, alerting). "
+                        "Worth a manual check."
+                    )
                 findings.append(
                     Finding(
                         path, node.lineno, "ASG003", f"Catch-all exception handling ({exc_kind})",
-                        "This except block only passes, continues, or logs — it silently "
-                        "swallows whatever error occurs instead of handling it.",
+                        reason,
                         "Catch the specific exception type you expect, handle it, or "
                         "re-raise with added context (e.g. `raise RuntimeError(...) from e`).",
                     )
@@ -191,21 +204,35 @@ def check_python(path: Path, source: str) -> list[Finding]:
             and not node.name.startswith("test_")
             and not node.decorator_list
         ):
-            defined[node.name] = node.lineno
-    called = {
-        n.func.id for n in ast.walk(tree) if isinstance(n, ast.Call) and isinstance(n.func, ast.Name)
-    }
-    for node in ast.walk(tree):
-        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
-            for dec in node.decorator_list:
-                for n in ast.walk(dec):
-                    if isinstance(n, ast.Name):
-                        called.add(n.id)
-    for name, lineno in defined.items():
-        if name not in called and name != "main":
+            defined[node.name] = node
+
+    def _used_outside(name: str, own_node: ast.AST) -> bool:
+        own_ids = {id(n) for n in ast.walk(own_node)}
+        for node in ast.walk(tree):
+            if id(node) in own_ids:
+                continue
+            if (
+                isinstance(node, ast.Call)
+                and isinstance(node.func, ast.Name)
+                and node.func.id == name
+            ):
+                return True
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                for dec in node.decorator_list:
+                    for n in ast.walk(dec):
+                        if isinstance(n, ast.Name) and n.id == name:
+                            return True
+        return False
+
+    for name, func_node in defined.items():
+        if (
+            name != "main"
+            and not _used_outside(name, func_node)
+            and not _is_ignored(source_lines, func_node.lineno)
+        ):
             findings.append(
                 Finding(
-                    path, lineno, "ASG002", f'Dead code candidate: "{name}"',
+                    path, func_node.lineno, "ASG002", f'Dead code candidate: "{name}"',
                     f"'{name}' is never called anywhere else in this file.",
                     "If it's genuinely unused, delete it. If it's called from another "
                     "file, this is a false positive — the script only sees one file at "

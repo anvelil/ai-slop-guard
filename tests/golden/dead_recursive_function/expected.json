@@ -1,0 +1,10 @@
+[
+  {
+    "path": "input.py",
+    "line": 1,
+    "rule_id": "ASG002",
+    "title": "Dead code candidate: \"unused_recursive\"",
+    "reason": "'unused_recursive' is never called anywhere else in this file.",
+    "fix": "If it's genuinely unused, delete it. If it's called from another file, this is a false positive \u2014 the script only sees one file at a time; verify manually before keeping it."
+  }
+]

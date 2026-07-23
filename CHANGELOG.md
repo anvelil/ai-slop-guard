@@ -9,10 +9,27 @@ Two version numbers move independently here:
   change to what it flags. A false-positive fix within a rule's existing
   scope does not bump it.
 
+## 0.3.1 — rule set v1.0.0
+
+### Fixed
+
+- `# slop-guard: ignore` was only wired up for ASG007 and the JS/TS
+  checks. ASG001, ASG002, ASG003 in Python ignored it. Now all of them
+  respect it.
+- ASG001: `import json` followed by `json = 5`, never read again, counted
+  as used — the check didn't distinguish `Load` from `Store` context. Fixed.
+- ASG002: a function calling only itself was always "used", so a dead
+  recursive function was never flagged. Fixed.
+- ASG003: a single-call except body (e.g. `rollback()`) was reported as
+  "silently swallows the error" with the same certainty as an empty
+  `pass`. It's usually logging but not always — reworded to say so instead
+  of asserting it.
+- 4 new golden fixtures for the above.
+
 ## 0.3.0 — rule set v1.0.0
 
 ### Changed
-- **9-Stage Pipeline**: Restructured the development and verification pipeline from 6 stages to 9 stages to introduce explicit Analyze, Plan, Syntax Check, and Testing phases.
+- **9-Stage Pipeline**: Restructured the development and verification pipeline from 6 stages to 9 stages, splitting the old combined step into explicit Analyze, Plan, and Syntax Check phases (see `docs/adr/0001-nine-stage-pipeline.md` for the full list).
 - Updated ADR-0001 ("Nine-stage pipeline") and ADR-0002 ("Stage 9 re-runs stage 6's exact check") to align with the new structure.
 
 ## 0.2.0 — rule set v1.0.0
@@ -38,7 +55,7 @@ Two version numbers move independently here:
 - `benchmarks/README.md` — methodology plus a real run against Flask's
   tutorial app.
 - `tests/golden/` (8 fixtures) + `tests/test_golden.py`, and
-  `.github/workflows/ci.yml` (self-check, golden tests, registry-sync).
+  `.github/workflows/main.yml` (self-check, golden tests, registry-sync).
 - `examples/` split into `real-world/`, `false-positive/`, `edge-cases/`.
 - `docs/known-limitations.md`, `docs/philosophy.md`,
   `references/registry.md` (generated from `data/rules.json`).

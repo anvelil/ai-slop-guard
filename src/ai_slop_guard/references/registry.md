@@ -48,7 +48,7 @@ import os
 os.environ['DEBUG'] = '1'  # used -> not flagged
 ```
 
-**Tradeoffs:** No known false positives on plain import/from-import. Python's __all__ re-exports (string literals only -- `__all__ = ["x"]` or `+= [...]`) are recognized as a use since 0.2.0. Dynamically built __all__ (e.g. a list comprehension) and TYPE_CHECKING-only imports used solely in string annotations are still not understood -- see docs/known-limitations.md.
+**Tradeoffs:** No known false positives on plain import/from-import. Python's __all__ re-exports (string literals only -- `__all__ = ["x"]` or `+= [...]`) are recognized as a use since 0.2.0. Dynamically built __all__ (e.g. a list comprehension) and TYPE_CHECKING-only imports used solely in string annotations are still not understood -- see docs/known-limitations.md. Not scope-aware: a same-named local variable or parameter read anywhere in the file can still mask an unused import (0.3.1).
 
 ### ASG002 — Dead code (module-level candidate) (experimental)
 
@@ -71,7 +71,7 @@ def index():
 # decorated -> not flagged, framework calls it indirectly
 ```
 
-**Tradeoffs:** Status is 'experimental' rather than 'stable': a benchmark against Flask's own tutorial app found a 34/34 false-positive rate before the decorator/test_* exclusion was added (see benchmarks/README.md), and this class of scope-narrowing may not be exhaustive yet -- other frameworks may have their own indirect-call conventions not yet excluded. It can never see cross-file calls, so every finding needs manual verification regardless.
+**Tradeoffs:** Status is 'experimental' rather than 'stable': a benchmark against Flask's own tutorial app found a 34/34 false-positive rate before the decorator/test_* exclusion was added (see benchmarks/README.md), and this class of scope-narrowing may not be exhaustive yet -- other frameworks may have their own indirect-call conventions not yet excluded. It can never see cross-file calls, so every finding needs manual verification regardless. A function calling only itself (recursion) is flagged if nothing else calls it, since 0.3.1.
 
 ### ASG003 — Catch-all / empty exception handling (stable)
 

@@ -1,0 +1,10 @@
+[
+  {
+    "path": "input.py",
+    "line": 1,
+    "rule_id": "ASG001",
+    "title": "Unused import \"json\"",
+    "reason": "'json' is imported on line 1 but never referenced.",
+    "fix": "Remove the import of 'json'."
+  }
+]
